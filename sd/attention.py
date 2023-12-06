@@ -28,9 +28,9 @@ class SelfAttention(nn.Module):
         )  # (bs, seq_len, dim) -> (bs, seq_len, dim * 3) -> 3 x (bs, seq_len, dim)
 
         # (bs, seq_len, dim) -> (bs, seq_len, n_heads, d_head) -> (bs, n_heads, seq_len, dim//n_heads)
-        q = q.view(interim_shape).transpose(1, 2)
-        k = q.view(interim_shape).transpose(1, 2)
-        v = q.view(interim_shape).transpose(1, 2)
+        q = q.contiguous().view(interim_shape).transpose(1, 2)
+        k = q.contiguous().view(interim_shape).transpose(1, 2)
+        v = q.contiguous().view(interim_shape).transpose(1, 2)
 
         # (bs, n_heads, seq_len, dim//n_heads) @ (bs, n_heads, dim//n_heads, seq_len) -> (bs, n_heads, seq_len, seq_len)
         weight = q @ k.transpose(-1, -2)
@@ -50,4 +50,53 @@ class SelfAttention(nn.Module):
 
         output = self.out_proj(output)  # (bs, seq_len, dim)
 
+        return output
+
+
+class CrossAttention(nn.Module):
+    def __init__(
+        self,
+        n_heads: int,
+        d_embed: int,
+        d_cross: int,
+        in_proj_bias=True,
+        out_proj_bias=True,
+    ):
+        super().__init__()
+
+        self.q_proj = nn.Linear(d_embed, d_embed, bias=in_proj_bias)
+        self.k_proj = nn.Linear(d_cross, d_embed, bias=in_proj_bias)
+        self.v_proj = nn.Linear(d_cross, d_embed, bias=in_proj_bias)
+        self.out_proj = nn.Linear(d_embed, d_embed, bias=out_proj_bias)
+        self.n_heads = n_heads
+        self.d_head = d_embed // n_heads
+
+    def forward(self, x, y):
+        # x: (latent): (bs, seq_len, dim_Q) # images
+        # y: (context): (bs, seq_lenKV, DimKV) = (bs, 77, 768) # words
+
+        input_shape = x.shape
+
+        batch_size, seq_length, d_embed = input_shape
+
+        interim_shape = (batch_size, -1, self.n_heads, self.d_head)
+
+        q = self.q_proj(x)
+        k = self.k_proj(y)
+        v = self.v_proj(y)
+
+        q = q.view(interim_shape).transpose(1, 2)
+        k = k.view(interim_shape).transpose(1, 2)
+        v = v.view(interim_shape).transpose(1, 2)
+
+        weight = q @ k.transpose(-1, -2)
+        weight /= math.sqrt(self.d_head)
+
+        weight = F.softmax(weight, dim=-1)
+
+        output = weight @ v
+        output = output.transpose(1, 2).contiguous()
+
+        output = output.view(input_shape)
+        output = self.out_proj(output)
         return output

@@ -1,0 +1,1 @@
+Stabel Diffusion coded from scratch in PyTorch using  this tutorial by Umar Jamil on Youtube: [Coding Stable Diffusion from scratch in PyTorch](https://youtu.be/ZBKpAp_6TGI?feature=shared)

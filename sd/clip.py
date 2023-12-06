@@ -6,18 +6,19 @@ from attention import SelfAttention
 
 class CLIPEmbedding(nn.Module):
     def __init__(self, n_vocab: int, n_embed: int, n_tokens: int):
+        super().__init__()
         self.token_embedding = nn.Embedding(
             num_embeddings=n_vocab, embedding_dim=n_embed
         )
-        self.positional_embedding = nn.Parameter(torch.zeros(n_tokens, n_embed))
+        self.position_embedding = nn.Parameter(torch.zeros(n_tokens, n_embed))
 
-        def forward(self, tokens):
-            # (bs, seq_len) -> (bs, seq_len, dim)
+    def forward(self, tokens):
+        # (bs, seq_len) -> (bs, seq_len, dim)
 
-            x = self.token_embedding(tokens)
-            pe = self.positional_embedding
+        x = self.token_embedding(tokens)
+        pe = self.position_embedding
 
-            return x + pe
+        return x + pe
 
 
 class CLIPLayer(nn.Module):
@@ -46,7 +47,7 @@ class CLIPLayer(nn.Module):
         x = self.layernorm_2(x)
         x = self.linear_1(x)
         x = x * torch.sigmoid(1.702 * x)  # QuickGELU
-        x = self.layernorm_2(x)
+        x = self.linear_2(x)
         x += residual
 
         return x
@@ -54,9 +55,10 @@ class CLIPLayer(nn.Module):
 
 class CLIP(nn.Module):
     def __init__(self):
+        super().__init__()
         self.embedding = CLIPEmbedding(49408, 768, 77)
 
-        self.layers = nn.Module([CLIPLayer(12, 768) for _ in range(12)])
+        self.layers = nn.ModuleList([CLIPLayer(12, 768) for _ in range(12)])
         self.layernorm = nn.LayerNorm(768)
 
     def forward(self, tokens: torch.LongTensor) -> torch.FloatTensor:
