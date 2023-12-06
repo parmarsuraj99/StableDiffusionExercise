@@ -67,7 +67,7 @@ def generate(
             cond_tokens = tokenizer.batch_encode_plus(
                 [prompt], padding="max_length", max_length=77
             ).input_ids
-            cond_tokens = torch.Tensor(
+            cond_tokens = torch.tensor(
                 cond_tokens, dtype=torch.long, device=device
             )  # (bs, seq_len)
 
@@ -119,6 +119,7 @@ def generate(
         diffusion.to(device)
 
         timesteps = tqdm(sampler.timesteps)
+        print(timesteps)
 
         for i, timestep in enumerate(timesteps):
             # (1, 320)
@@ -140,19 +141,19 @@ def generate(
 
             latents = sampler.step(timestep, latents, model_output)
 
-            to_idle(diffusion)
+        to_idle(diffusion)
 
-            decoder = models["decoder"]
-            decoder.to(device)
+        decoder = models["decoder"]
+        decoder.to(device)
 
-            images = decoder(latents)
-            to_idle(decoder)
+        images = decoder(latents)
+        to_idle(decoder)
 
-            images: torch.Tensor = rescale(images, (-1, 1), (0, 255), clamp=True)
-            images = images.permute(0, 2, 3, 1)
+        images: torch.Tensor = rescale(images, (-1, 1), (0, 255), clamp=True)
+        images = images.permute(0, 2, 3, 1)
 
-            images = images.to("cpu", torch.uint8).numpy()
-            return images[0]
+        images = images.to("cpu", torch.uint8).numpy()
+        return images[0]
 
 
 def rescale(x, old_range, new_range, clamp=False):
