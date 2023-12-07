@@ -29,8 +29,8 @@ class SelfAttention(nn.Module):
 
         # (bs, seq_len, dim) -> (bs, seq_len, n_heads, d_head) -> (bs, n_heads, seq_len, dim//n_heads)
         q = q.contiguous().view(interim_shape).transpose(1, 2)
-        k = q.contiguous().view(interim_shape).transpose(1, 2)
-        v = q.contiguous().view(interim_shape).transpose(1, 2)
+        k = k.contiguous().view(interim_shape).transpose(1, 2)
+        v = v.contiguous().view(interim_shape).transpose(1, 2)
 
         # (bs, n_heads, seq_len, dim//n_heads) @ (bs, n_heads, dim//n_heads, seq_len) -> (bs, n_heads, seq_len, seq_len)
         weight = q @ k.transpose(-1, -2)

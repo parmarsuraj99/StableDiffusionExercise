@@ -136,6 +136,7 @@ def generate(
 
             # (Batch_Size, 4, Latents_Height, Latents_Width) -> (Batch_Size, 4, Latents_Height, Latents_Width)
             latents = sampler.step(timestep, latents, model_output)
+            print(latents.mean())
 
         to_idle(diffusion)
 

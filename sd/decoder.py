@@ -102,13 +102,13 @@ class VAE_Decoder(nn.Sequential):
             nn.Conv2d(in_channels=128, out_channels=3, kernel_size=3, padding=1),  # # (bs, 3, h, w)
         )
 
-        def forward(self, x: torch.Tensor) -> torch.Tensor:
-            # x: (bs, channels=3, height, width)
-            # noise: bs, output_channels, height/8, width/8)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: (bs, channels=3, height, width)
+        # noise: bs, output_channels, height/8, width/8)
 
-            x = x / 0.18215
+        x = x / 0.18215
 
-            for module in self:
-                x = module(x)
+        for module in self:
+            x = module(x)
 
-            return x
+        return x

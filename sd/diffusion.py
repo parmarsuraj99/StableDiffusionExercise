@@ -104,6 +104,7 @@ class UNET_AttentionBlock(nn.Module):
 
         # normalization + SelfAttention w/ skip connections
         residual_short = x
+        x = self.layernorm_1(x)
         x = self.attention_1(x)
         x += residual_short
 
